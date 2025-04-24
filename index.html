@@ -3,31 +3,21 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>아정당 렌탈 시트 뷰어</title>
+  <title>아정당 렌탈 전체 리스트</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; font-size: 12px; }
-    th { background-color: #f2f2f2; }
-    .search-bar { margin-bottom: 10px; }
-    .search-bar input { padding: 8px; width: 300px; }
-    .search-bar button { padding: 8px 12px; }
+    h2 { margin-bottom: 16px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 12px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    .table-container { overflow-x: auto; max-width: 100%; }
   </style>
 </head>
 <body>
   <h2>아정당 렌탈 시트 전체 보기</h2>
-  <div class="search-bar">
-    <input type="text" id="query" placeholder="상품명 또는 모델명 검색">
-    <button onclick="search()">검색</button>
-  </div>
-  <div id="tableContainer">불러오는 중...</div>
+  <div class="table-container" id="tableContainer">불러오는 중...</div>
 
   <script>
-    function search() {
-      const query = document.getElementById('query').value;
-      google.script.run.withSuccessHandler(drawTable).searchAll(query);
-    }
-
     function drawTable(data) {
       let html = '<table><thead><tr>';
       const header = data[0];
@@ -46,8 +36,8 @@
       document.getElementById('tableContainer').innerHTML = html;
     }
 
-    // 기본으로 전체 표시
-    google.script.run.withSuccessHandler(drawTable).searchAll('');
+    // 페이지 로딩 시 전체 데이터 표시
+    google.script.run.withSuccessHandler(drawTable).getAllSheetData();
   </script>
 </body>
 </html>
