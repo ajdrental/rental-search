@@ -27,45 +27,29 @@
   <div id="results"></div>
 
   <script>
-    const sheetID = '14OMmONt1rEvjLlaBBeBHV2NZrusEke-z';
-    const sheetName = '01.아정당렌탈 리스트(CS마케팅 공유용)';
-    const query = encodeURIComponent('SELECT *');
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
-
     function sanitizeURL(url) {
       if (!url) return '';
       return url.includes('http') ? url : `https://${url}`;
     }
 
     function drawTable(data) {
-      const rows = data.table.rows;
       const resultDiv = $('#results');
       resultDiv.empty();
-      const keyword = $('#searchInput').val().toLowerCase();
 
-      rows.forEach(row => {
-        const 상품명 = row.c[3]?.v || '';
-        const 모델명 = row.c[4]?.v || '';
-        const 썸네일URL = sanitizeURL(row.c[7]?.v || '');
-        const 렌탈료36 = row.c[14]?.v || '-';
-        const 렌탈료48 = row.c[15]?.v || '-';
-        const 렌탈료60 = row.c[16]?.v || '-';
-        const 정책36 = row.c[20]?.v || '-';
-        const 정책48 = row.c[21]?.v || '-';
-        const 정책60 = row.c[22]?.v || '-';
-        const CRMurl = sanitizeURL(row.c[11]?.v || '');
+      if (!data.length) {
+        resultDiv.append('<p>검색 결과가 없습니다.</p>');
+        return;
+      }
 
-        const matchesKeyword = 상품명.toLowerCase().includes(keyword) || 모델명.toLowerCase().includes(keyword);
-        if (!matchesKeyword) return;
-
+      data.forEach(item => {
         const card = `<div class="card">
-          <img class="thumb" src="${썸네일URL}" alt="이미지">
+          <img class="thumb" src="${sanitizeURL(item.썸네일)}" alt="이미지">
           <div class="info">
-            <div class="title">${상품명}</div>
-            <div class="model">모델명: ${모델명}</div>
-            <div class="rent">월렌탈료: 36개월 ${렌탈료36} / 48개월 ${렌탈료48} / 60개월 ${렌탈료60}</div>
-            <div class="policy">정책: 36개월 ${정책36} / 48개월 ${정책48} / 60개월 ${정책60}</div>
-            <a class="crm-link" href="${CRMurl}" target="_blank">CRM 바로가기</a>
+            <div class="title">${item.상품명}</div>
+            <div class="model">모델명: ${item.모델명}</div>
+            <div class="rent">월렌탈료: 36개월 ${item.렌탈료36} / 48개월 ${item.렌탈료48} / 60개월 ${item.렌탈료60}</div>
+            <div class="policy">정책: 36개월 ${item.정책36} / 48개월 ${item.정책48} / 60개월 ${item.정책60}</div>
+            <a class="crm-link" href="${sanitizeURL(item.CRM)}" target="_blank">CRM 바로가기</a>
           </div>
         </div>`;
         resultDiv.append(card);
@@ -73,13 +57,14 @@
     }
 
     function fetchData() {
-      $.ajax({
-        url,
-        dataType: 'text'
-      }).done(response => {
-        const json = JSON.parse(response.substring(47).slice(0, -2));
-        drawTable(json);
-      });
+      const query = $('#searchInput').val();
+      fetch("https://script.google.com/macros/s/AKfycbykkOpzgFWWj8i9-gf9CO7C-CFV57LTnRMlFkuo0vPKOBaBSZW2GedXoAMjiMjGG9g2/exec?q=" + encodeURIComponent(query))
+        .then(response => response.json())
+        .then(data => drawTable(data))
+        .catch(error => {
+          console.error('API 호출 오류:', error);
+          $('#results').html('<p style="color:red;">검색 중 오류가 발생했습니다.</p>');
+        });
     }
   </script>
 </body>
