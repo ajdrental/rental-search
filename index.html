@@ -1,71 +1,53 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>아정당 상품 검색</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <title>아정당 렌탈 시트 뷰어</title>
   <style>
-    body { font-family: 'Arial', sans-serif; padding: 20px; }
-    .search-bar { margin-bottom: 20px; }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; font-size: 12px; }
+    th { background-color: #f2f2f2; }
+    .search-bar { margin-bottom: 10px; }
     .search-bar input { padding: 8px; width: 300px; }
-    .search-bar button { padding: 8px 12px; margin-left: 8px; cursor: pointer; }
-    .card { border: 1px solid #ccc; padding: 16px; margin-bottom: 10px; border-radius: 8px; display: flex; gap: 16px; align-items: center; }
-    .thumb { width: 100px; height: 100px; object-fit: cover; border: 1px solid #eee; border-radius: 8px; }
-    .info { flex: 1; }
-    .title { font-size: 18px; font-weight: bold; }
-    .model { color: #666; }
-    .rent, .policy { margin-top: 4px; }
-    .crm-link { margin-top: 8px; display: inline-block; color: #007bff; text-decoration: none; }
+    .search-bar button { padding: 8px 12px; }
   </style>
 </head>
 <body>
-  <h1>아정당 상품 검색</h1>
+  <h2>아정당 렌탈 시트 전체 보기</h2>
   <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="상품명 또는 모델명 검색">
-    <button onclick="fetchData()">검색</button>
+    <input type="text" id="query" placeholder="상품명 또는 모델명 검색">
+    <button onclick="search()">검색</button>
   </div>
-  <div id="results"></div>
+  <div id="tableContainer">불러오는 중...</div>
 
   <script>
-    function sanitizeURL(url) {
-      if (!url) return '';
-      return url.includes('http') ? url : `https://${url}`;
+    function search() {
+      const query = document.getElementById('query').value;
+      google.script.run.withSuccessHandler(drawTable).searchAll(query);
     }
 
     function drawTable(data) {
-      const resultDiv = $('#results');
-      resultDiv.empty();
-
-      if (!data.length) {
-        resultDiv.append('<p>검색 결과가 없습니다.</p>');
-        return;
+      let html = '<table><thead><tr>';
+      const header = data[0];
+      for (let h of header) {
+        html += `<th>${h}</th>`;
       }
-
-      data.forEach(item => {
-        const card = `<div class="card">
-          <img class="thumb" src="${sanitizeURL(item.썸네일)}" alt="이미지">
-          <div class="info">
-            <div class="title">${item.상품명}</div>
-            <div class="model">모델명: ${item.모델명}</div>
-            <div class="rent">월렌탈료: 36개월 ${item.렌탈료36} / 48개월 ${item.렌탈료48} / 60개월 ${item.렌탈료60}</div>
-            <div class="policy">정책: 36개월 ${item.정책36} / 48개월 ${item.정책48} / 60개월 ${item.정책60}</div>
-            <a class="crm-link" href="${sanitizeURL(item.CRM)}" target="_blank">CRM 바로가기</a>
-          </div>
-        </div>`;
-        resultDiv.append(card);
-      });
+      html += '</tr></thead><tbody>';
+      for (let i = 1; i < data.length; i++) {
+        html += '<tr>';
+        for (let cell of data[i]) {
+          html += `<td>${cell ?? ''}</td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      document.getElementById('tableContainer').innerHTML = html;
     }
 
-    function fetchData() {
-      const query = $('#searchInput').val();
-      fetch("https://script.google.com/macros/s/AKfycbykkOpzgFWWj8i9-gf9CO7C-CFV57LTnRMlFkuo0vPKOBaBSZW2GedXoAMjiMjGG9g2/exec?q=" + encodeURIComponent(query))
-        .then(response => response.json())
-        .then(data => drawTable(data))
-        .catch(error => {
-          console.error('API 호출 오류:', error);
-          $('#results').html('<p style="color:red;">검색 중 오류가 발생했습니다.</p>');
-        });
-    }
+    // 기본으로 전체 표시
+    google.script.run.withSuccessHandler(drawTable).searchAll('');
   </script>
 </body>
 </html>
